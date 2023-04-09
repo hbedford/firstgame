@@ -32,26 +32,9 @@ class Player extends SpriteComponent
   @override
   void update(double dt) {
     super.update(dt);
-    // currentVelocity = hitRight && !input.x.isNegative ? 0 : 1;
-    // if (input.x > 0 && hitRight) {
-    //   currentVelocity;
-    // }
     checkVelocity();
-    scale.x = checkDirection();
     gameRef.velocity.x = input.x * maxSpeed * currentVelocity;
     gameRef.velocity.y = -input.y * maxSpeed;
-    // gameRef.velocity = velocity * currentVelocity;
-  }
-
-  double checkDirection() {
-    if (input.x > 0) {
-      return 1;
-    }
-    if (input.x < 0) {
-      return -1;
-    }
-
-    return scale.x;
   }
 
   checkHitRight() {
@@ -87,22 +70,26 @@ class Player extends SpriteComponent
   @override
   void onCollision(intersectionPoints, other) {
     super.onCollision(intersectionPoints, other);
-    if (other is Ground || other is Wall) {
-      if (input.x != 0) {
-        for (var point in intersectionPoints) {
-          if (x - 50 < point.x) {
-            debugPrint('hit right');
-            hitRight = true;
-            hitLeft = false;
-            return;
-          }
-          if (position.x - 100 > point.x) {
-            debugPrint('hit left');
-            hitLeft = true;
-            hitRight = false;
-          }
-        }
-      }
+    if (input.x == 0) return;
+
+    if (other is! Ground && other is! Wall) return;
+
+    for (Vector2 point in intersectionPoints) {
+      checkIsHittingObject(point);
+    }
+  }
+
+  void checkIsHittingObject(Vector2 point) {
+    bool hittingRight = x - (size.x / 3) < point.x;
+    bool hittingLeft = x - size.x < point.x;
+    if (hittingRight) {
+      hitRight = true;
+      hitLeft = false;
+      return;
+    }
+    if (hittingLeft) {
+      hitLeft = true;
+      hitRight = false;
     }
   }
 
