@@ -1,64 +1,86 @@
 import 'dart:async';
 
+import 'package:firstgame/actors/player.dart';
 import 'package:firstgame/player_movement.dart';
-import 'package:flame/collisions.dart';
-import 'package:flame/components.dart';
+import 'package:firstgame/world/ground.dart';
+import 'package:firstgame/world/wall.dart';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
-import 'package:flame_forge2d/flame_forge2d.dart';
-import 'package:flame_tiled/flame_tiled.dart';
+import 'package:flame/particles.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 void main() {
   runApp(GameWidget(game: AmongGame()));
 }
 
-class AmongGame extends FlameGame
-    with KeyboardEvents, HasCollisionDetection, Collision {
-  SpriteComponent player = SpriteComponent(size: Vector2(20, 20));
+class AmongGame extends FlameGame with KeyboardEvents, HasCollisionDetection {
+  late Player player;
+  late Ground ground;
+  late Wall wall;
 
-  SpriteComponent wall =
-      SpriteComponent(size: Vector2(1000, 50), position: Vector2(0, 0));
-  SpriteComponent ground = SpriteComponent(
-    size: Vector2(1, 1),
-    position: Vector2(0, 0),
-  );
   Vector2 velocity = Vector2.zero();
-  // static Player player = Player()
-  //   ..width = 50
-  //   ..height = 50;
-
-  static Floor floor = Floor(size: Vector2(200, 200), position: Vector2(0, 0));
-
-  // static Floor floor2 = Floor()
-  //   ..height = 200
-  //   ..width = 200
-  //   ..position = Vector2(100, 200);
 
   Vector2 position = Vector2(0, 0);
   @override
   FutureOr<void> onLoad() async {
     super.onLoad();
-    // add(ground);
-    // ground..sprite = await loadSprite('ground.png');
+    debugMode = true;
 
-    // add(floor);
-    // add(floor2);
-    // add(wall);
-    // add(wall2);
-    add(player);
+    ground = Ground(
+      sprite: await loadSprite('ground.png'),
+      size: Vector2(2000, 50),
+      position: Vector2(0, size.y - 50),
+    );
+
+    wall = Wall(
+      sprite: await loadSprite('wall.png'),
+      size: Vector2(50, 200),
+      position: Vector2(size.x / 2, size.y - 260),
+    );
+
+    player = Player(
+      sprite: await loadSprite(
+        'player.png',
+        srcPosition: Vector2(50, 50),
+      ),
+      size: Vector2(100, 100),
+      position: Vector2(200, 400),
+    );
+    player.anchor = Anchor.center;
+    add(ground);
     add(wall);
-    player..sprite = await loadSprite('player.png');
-    wall..sprite = await loadSprite('wall.png');
+    add(player);
+    camera.followComponent(player);
   }
 
+  static LogicalKeyboardKey leftKey = LogicalKeyboardKey.arrowLeft;
+  static LogicalKeyboardKey rightKey = LogicalKeyboardKey.arrowRight;
+  static LogicalKeyboardKey upKey = LogicalKeyboardKey.arrowUp;
+  static LogicalKeyboardKey downKey = LogicalKeyboardKey.arrowDown;
   @override
   KeyEventResult onKeyEvent(
       RawKeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
-    PlayerMovement.checkMove(keysPressed, position, velocity);
+    Vector2 input = Vector2(0, 0);
+    if (keysPressed.contains(leftKey) && !keysPressed.contains(rightKey)) {
+      input.x = -1;
+    } else if (keysPressed.contains(rightKey) &&
+        !keysPressed.contains(leftKey)) {
+      input.x = 1;
+    } else {
+      input.x = 0;
+    }
+    if (keysPressed.contains(upKey) && !keysPressed.contains(downKey)) {
+      input.y = 1;
+    } else if (keysPressed.contains(downKey) && !keysPressed.contains(upKey)) {
+      input.y = -1;
+    } else {
+      input.y = 0;
+    }
+    player.input = input;
+
+    // PlayerMovement.checkMove(keysPressed, position, player.velocity);
     return super.onKeyEvent(event, keysPressed);
   }
 
@@ -66,32 +88,5 @@ class AmongGame extends FlameGame
   void update(double dt) {
     super.update(dt);
     player.position.add(velocity * dt);
-  }
-}
-
-class Floor extends PositionComponent with CollisionCallbacks {
-  Floor({required super.size, required super.position});
-  @override
-  FutureOr<void> onLoad() {
-    super.onLoad();
-    add(RectangleHitbox());
-  }
-
-  // static final _paint = Paint()..color = Colors.white;
-  // @override
-  // void render(Canvas canvas) {
-  //   super.render(canvas);
-  //   canvas.drawRect(size.toRect(), _paint);
-  // }
-}
-
-class Wall extends PositionComponent
-    with CollisionCallbacks, HasGameRef<AmongGame> {
-  static final _paint = Paint()..color = Colors.red;
-  @override
-  void render(Canvas canvas) {
-    super.render(canvas);
-    canvas.drawRect(size.toRect(), _paint);
-    add(RectangleHitbox()..collisionType = CollisionType.active);
   }
 }

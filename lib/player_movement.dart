@@ -9,7 +9,7 @@ class PlayerMovement {
   static LogicalKeyboardKey upKey = LogicalKeyboardKey.arrowUp;
   static LogicalKeyboardKey downKey = LogicalKeyboardKey.arrowDown;
 
-  static double maxSpeed = 100;
+  static double maxSpeed = 250;
 
   static checkMove(
       Set<LogicalKeyboardKey> keysPressed, Vector2 position, Vector2 velocity) {
@@ -38,9 +38,7 @@ class PlayerMovement {
   }
 
   static checkMoveRight(Set<LogicalKeyboardKey> keysPressed, Vector2 velocity) {
-    if (keysPressed.contains(rightKey)) {
-      velocity.x = maxSpeed;
-    }
+    if (keysPressed.contains(rightKey)) velocity.x = maxSpeed;
   }
 
   static checkMoveLeft(Set<LogicalKeyboardKey> keysPressed, Vector2 velocity) {

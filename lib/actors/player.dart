@@ -1,67 +1,105 @@
 import 'dart:async';
 
 import 'package:firstgame/main.dart';
+import 'package:firstgame/world/ground.dart';
+import 'package:firstgame/world/wall.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flutter/foundation.dart';
 
-class Player extends PositionComponent
+class Player extends SpriteComponent
     with CollisionCallbacks, HasGameRef<AmongGame> {
+  Player({required super.sprite, required super.size, required super.position});
   @override
   bool get debugMode => true;
   Vector2 velocity = Vector2(0, 0);
+  double currentVelocity = 1;
   bool onGround = false;
   bool facingRight = true;
   bool hitRight = false;
   bool hitLeft = false;
+  Vector2 input = Vector2(0, 0);
+  double currentSpeed = 0;
+  double maxSpeed = 200;
 
   @override
   FutureOr<void> onLoad() {
+    super.onLoad();
     add(RectangleHitbox());
-    return super.onLoad();
+    debugMode = true;
   }
 
   @override
   void update(double dt) {
     super.update(dt);
-    gameRef.velocity = velocity;
+    // currentVelocity = hitRight && !input.x.isNegative ? 0 : 1;
+    // if (input.x > 0 && hitRight) {
+    //   currentVelocity;
+    // }
+    checkVelocity();
+    scale.x = checkDirection();
+    gameRef.velocity.x = input.x * maxSpeed * currentVelocity;
+    gameRef.velocity.y = -input.y * maxSpeed;
+    // gameRef.velocity = velocity * currentVelocity;
+  }
+
+  double checkDirection() {
+    if (input.x > 0) {
+      return 1;
+    }
+    if (input.x < 0) {
+      return -1;
+    }
+
+    return scale.x;
+  }
+
+  checkHitRight() {
+    if (!input.x.isNegative) {
+      currentVelocity = 0;
+      return;
+    }
+
+    currentVelocity = 1;
+  }
+
+  checkHitLeft() {
+    if (input.x.isNegative) {
+      currentVelocity = 0;
+      return;
+    }
+
+    currentVelocity = 1;
+  }
+
+  checkVelocity() {
+    if (hitRight) {
+      checkHitRight();
+      return;
+    }
+    if (hitLeft) {
+      checkHitLeft();
+      return;
+    }
+    currentVelocity = 1;
   }
 
   @override
   void onCollision(intersectionPoints, other) {
     super.onCollision(intersectionPoints, other);
-    if (other is Floor) {
-      if (gameRef.velocity.y > 0) {
-        if (intersectionPoints.length == 2) {
-          var x1 = intersectionPoints.first[0];
-          var x2 = intersectionPoints.last[0];
-          if ((x1 - x2).abs() < 10) {
-            // hit the side, so send down with gravity.
-            gameRef.velocity.y = 100;
-            print('stuck on side');
-          } else {
-            // hit ground
-            gameRef.velocity.y = 0;
-            onGround = true;
-          }
-        }
-      }
-      if (gameRef.velocity.x != 0) {
+    if (other is Ground || other is Wall) {
+      if (input.x != 0) {
         for (var point in intersectionPoints) {
-          if (y - 5 >= point[1]) {
-            print('hit on side of ground');
-            print('the bottom of the girl is $y');
-            print('one of the y intersection points is ${point[1]}');
-            print('note that ${point[1]} is much higher than $y}');
-            gameRef.velocity.x = 0;
-            if (point[0] > x) {
-              // print('hit right');
-              hitRight = true;
-              hitLeft = false;
-            } else {
-              // print('hit left');
-              hitLeft = true;
-              hitRight = false;
-            }
+          if (x - 50 < point.x) {
+            debugPrint('hit right');
+            hitRight = true;
+            hitLeft = false;
+            return;
+          }
+          if (position.x - 100 > point.x) {
+            debugPrint('hit left');
+            hitLeft = true;
+            hitRight = false;
           }
         }
       }
