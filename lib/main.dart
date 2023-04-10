@@ -19,6 +19,7 @@ class AmongGame extends FlameGame with KeyboardEvents, HasCollisionDetection {
   late Player player;
   late Ground ground;
   late Wall wall;
+  late Wall wall2;
 
   Vector2 velocity = Vector2.zero();
 
@@ -39,7 +40,11 @@ class AmongGame extends FlameGame with KeyboardEvents, HasCollisionDetection {
       size: Vector2(50, 200),
       position: Vector2(size.x / 2, size.y - 260),
     );
-
+    wall2 = Wall(
+      sprite: await loadSprite('wall.png'),
+      size: Vector2(200, 50),
+      position: Vector2(size.x / 3, size.y - 260),
+    );
     player = Player(
       sprite: await loadSprite(
         'player.png',
@@ -51,6 +56,7 @@ class AmongGame extends FlameGame with KeyboardEvents, HasCollisionDetection {
     player.anchor = Anchor.center;
     add(ground);
     add(wall);
+    add(wall2);
     add(player);
     camera.followComponent(player);
   }

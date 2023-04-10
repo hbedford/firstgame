@@ -13,11 +13,13 @@ class Player extends SpriteComponent
   @override
   bool get debugMode => true;
   Vector2 velocity = Vector2(0, 0);
-  double currentVelocity = 1;
-  bool onGround = false;
+  double currentVelocityY = 1;
+  double currentVelocityX = 1;
   bool facingRight = true;
   bool hitRight = false;
   bool hitLeft = false;
+  bool hitTop = false;
+  bool hitBottom = false;
   Vector2 input = Vector2(0, 0);
   double currentSpeed = 0;
   double maxSpeed = 200;
@@ -25,7 +27,7 @@ class Player extends SpriteComponent
   @override
   FutureOr<void> onLoad() {
     super.onLoad();
-    add(RectangleHitbox());
+    add(CircleHitbox(radius: 50));
     debugMode = true;
   }
 
@@ -33,26 +35,44 @@ class Player extends SpriteComponent
   void update(double dt) {
     super.update(dt);
     checkVelocity();
-    gameRef.velocity.x = input.x * maxSpeed * currentVelocity;
-    gameRef.velocity.y = -input.y * maxSpeed;
+    gameRef.velocity.x = input.x * maxSpeed * currentVelocityX;
+    gameRef.velocity.y = -input.y * maxSpeed * currentVelocityY;
   }
 
   checkHitRight() {
     if (!input.x.isNegative) {
-      currentVelocity = 0;
+      currentVelocityX = 0;
       return;
     }
 
-    currentVelocity = 1;
+    currentVelocityX = 1;
   }
 
   checkHitLeft() {
     if (input.x.isNegative) {
-      currentVelocity = 0;
+      currentVelocityX = 0;
       return;
     }
 
-    currentVelocity = 1;
+    currentVelocityX = 1;
+  }
+
+  checkHitTop() {
+    if (input.y.isNegative) {
+      currentVelocityY = 0;
+      return;
+    }
+
+    currentVelocityY = 1;
+  }
+
+  checkHitBottom() {
+    if (!input.y.isNegative) {
+      currentVelocityY = 0;
+      return;
+    }
+
+    currentVelocityY = 1;
   }
 
   checkVelocity() {
@@ -64,41 +84,71 @@ class Player extends SpriteComponent
       checkHitLeft();
       return;
     }
-    currentVelocity = 1;
+    if (hitTop) {
+      checkHitTop();
+      return;
+    }
+    if (hitBottom) {
+      checkHitBottom();
+      return;
+    }
+
+    currentVelocityX = 1;
   }
 
   @override
-  void onCollision(intersectionPoints, other) {
-    super.onCollision(intersectionPoints, other);
-    if (input.x == 0) return;
+  void onCollisionStart(intersectionPoints, other) {
+    super.onCollisionStart(intersectionPoints, other);
+    if (input.x == 0 && input.y == 0) return;
 
     if (other is! Ground && other is! Wall) return;
-
+    bool isSideCollision =
+        intersectionPoints.first.x == intersectionPoints.last.x;
     for (Vector2 point in intersectionPoints) {
-      checkIsHittingObject(point);
+      checkIsHittingObject(point, isSideCollision: isSideCollision);
     }
   }
 
-  void checkIsHittingObject(Vector2 point) {
+  void checkIsHittingObject(Vector2 point, {required bool isSideCollision}) {
+    debugPrint("x: $x, y: $y size.x: ${size.x}, size.y: ${size.y}");
+
     bool hittingRight = x - (size.x / 3) < point.x;
     bool hittingLeft = x - size.x < point.x;
-    if (hittingRight) {
+    bool hittingTop = y - size.y < point.y;
+    bool hittingBottom = y < point.y;
+    if (hittingRight && isSideCollision) {
+      debugPrint("Hitting Right");
       hitRight = true;
       hitLeft = false;
       return;
     }
-    if (hittingLeft) {
+    if (hittingLeft && isSideCollision) {
+      debugPrint("Hitting Left");
       hitLeft = true;
       hitRight = false;
+      return;
+    }
+    if (hittingTop) {
+      debugPrint("Hitting Top");
+      hitTop = true;
+      hitBottom = false;
+      return;
+    }
+    if (hittingBottom) {
+      debugPrint("Hitting Bottom");
+      hitBottom = true;
+      hitTop = false;
+      return;
     }
   }
 
   @override
   void onCollisionEnd(other) {
     super.onCollisionEnd(other);
-    onGround = false;
     hitLeft = false;
     hitRight = false;
+    hitTop = false;
+    hitBottom = false;
   }
 
 //
