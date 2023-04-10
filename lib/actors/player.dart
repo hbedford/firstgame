@@ -114,8 +114,8 @@ class Player extends SpriteComponent
 
     bool hittingRight = x - (size.x / 3) < point.x;
     bool hittingLeft = x - size.x < point.x;
-    bool hittingTop = y - size.y < point.y;
-    bool hittingBottom = y < point.y;
+    bool hittingTop = y < point.y;
+    bool hittingBottom = y - size.y < point.y;
     if (hittingRight && isSideCollision) {
       debugPrint("Hitting Right");
       hitRight = true;
@@ -126,6 +126,7 @@ class Player extends SpriteComponent
       debugPrint("Hitting Left");
       hitLeft = true;
       hitRight = false;
+
       return;
     }
     if (hittingTop) {
