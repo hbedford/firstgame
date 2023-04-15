@@ -5,7 +5,7 @@ import 'package:flame/components.dart';
 import 'package:flame/collisions.dart';
 
 class Ground extends SpriteComponent
-    with CollisionCallbacks, HasGameRef<AmongGame> {
+    with CollisionCallbacks, HasGameRef<AmongGame2> {
   Ground({
     required super.sprite,
     required super.size,

@@ -1,15 +1,25 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:firstgame/main.dart';
 import 'package:firstgame/world/ground.dart';
 import 'package:firstgame/world/wall.dart';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flame_forge2d/body_component.dart';
+import 'package:flame_forge2d/flame_forge2d.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
-class Player extends SpriteComponent
-    with CollisionCallbacks, HasGameRef<AmongGame> {
-  Player({required super.sprite, required super.size, required super.position});
+class Player extends BodyComponent<AmongGame2> {
+  final Sprite sprite;
+  final Vector2 size;
+  final Vector2 position;
+  Player({
+    required this.sprite,
+    required this.size,
+    required this.position,
+  });
   @override
   bool get debugMode => true;
   Vector2 velocity = Vector2(0, 0);
@@ -25,18 +35,39 @@ class Player extends SpriteComponent
   double maxSpeed = 200;
 
   @override
-  FutureOr<void> onLoad() {
+  Future<void> onLoad() async {
     super.onLoad();
-    add(CircleHitbox(radius: 50));
     debugMode = true;
+    add(SpriteComponent(sprite: sprite, size: size, anchor: Anchor.center));
   }
 
   @override
   void update(double dt) {
     super.update(dt);
+
     checkVelocity();
     gameRef.velocity.x = input.x * maxSpeed * currentVelocityX;
     gameRef.velocity.y = -input.y * maxSpeed * currentVelocityY;
+  }
+
+  @override
+  void render(Canvas canvas) {}
+
+  @override
+  Body createBody() {
+    final bodyDef = BodyDef()
+      ..position = position
+      ..type = BodyType.dynamic;
+    final body = world.createBody(bodyDef);
+    final shape = PolygonShape();
+
+    shape.setAsBoxXY(size.x / 2, size.y / 2);
+
+    final fixtureDef = FixtureDef(shape)
+      ..density = 0.0
+      ..restitution = 0.0;
+    body.createFixture(fixtureDef);
+    return body;
   }
 
   checkHitRight() {
@@ -96,61 +127,61 @@ class Player extends SpriteComponent
     currentVelocityX = 1;
   }
 
-  @override
-  void onCollisionStart(intersectionPoints, other) {
-    super.onCollisionStart(intersectionPoints, other);
-    if (input.x == 0 && input.y == 0) return;
-
-    if (other is! Ground && other is! Wall) return;
-    bool isSideCollision =
-        intersectionPoints.first.x == intersectionPoints.last.x;
-    for (Vector2 point in intersectionPoints) {
-      checkIsHittingObject(point, isSideCollision: isSideCollision);
-    }
-  }
-
-  void checkIsHittingObject(Vector2 point, {required bool isSideCollision}) {
-    debugPrint("x: $x, y: $y size.x: ${size.x}, size.y: ${size.y}");
-
-    bool hittingRight = x - (size.x / 3) < point.x;
-    bool hittingLeft = x - size.x < point.x;
-    bool hittingTop = y < point.y;
-    bool hittingBottom = y - size.y < point.y;
-    if (hittingRight && isSideCollision) {
-      debugPrint("Hitting Right");
-      hitRight = true;
-      hitLeft = false;
-      return;
-    }
-    if (hittingLeft && isSideCollision) {
-      debugPrint("Hitting Left");
-      hitLeft = true;
-      hitRight = false;
-
-      return;
-    }
-    if (hittingTop) {
-      debugPrint("Hitting Top");
-      hitTop = true;
-      hitBottom = false;
-      return;
-    }
-    if (hittingBottom) {
-      debugPrint("Hitting Bottom");
-      hitBottom = true;
-      hitTop = false;
-      return;
-    }
-  }
-
-  @override
-  void onCollisionEnd(other) {
-    super.onCollisionEnd(other);
-    hitLeft = false;
-    hitRight = false;
-    hitTop = false;
-    hitBottom = false;
-  }
+  // @override
+  // void onCollisionStart(intersectionPoints, other) {
+  //   super.onCollisionStart(intersectionPoints, other);
+  //   if (input.x == 0 && input.y == 0) return;
+  //
+  //   if (other is! Ground && other is! Wall) return;
+  //   bool isSideCollision =
+  //       intersectionPoints.first.x == intersectionPoints.last.x;
+  //   for (Vector2 point in intersectionPoints) {
+  //     checkIsHittingObject(point, isSideCollision: isSideCollision);
+  //   }
+  // }
+  //
+  // void checkIsHittingObject(Vector2 point, {required bool isSideCollision}) {
+  //   debugPrint("x: $x, y: $y size.x: ${size.x}, size.y: ${size.y}");
+  //
+  //   bool hittingRight = x - (size.x / 3) < point.x;
+  //   bool hittingLeft = x - size.x < point.x;
+  //   bool hittingTop = y < point.y;
+  //   bool hittingBottom = y - size.y < point.y;
+  //   if (hittingRight && isSideCollision) {
+  //     debugPrint("Hitting Right");
+  //     hitRight = true;
+  //     hitLeft = false;
+  //     return;
+  //   }
+  //   if (hittingLeft && isSideCollision) {
+  //     debugPrint("Hitting Left");
+  //     hitLeft = true;
+  //     hitRight = false;
+  //
+  //     return;
+  //   }
+  //   if (hittingTop) {
+  //     debugPrint("Hitting Top");
+  //     hitTop = true;
+  //     hitBottom = false;
+  //     return;
+  //   }
+  //   if (hittingBottom) {
+  //     debugPrint("Hitting Bottom");
+  //     hitBottom = true;
+  //     hitTop = false;
+  //     return;
+  //   }
+  // }
+  //
+  // @override
+  // void onCollisionEnd(other) {
+  //   super.onCollisionEnd(other);
+  //   hitLeft = false;
+  //   hitRight = false;
+  //   hitTop = false;
+  //   hitBottom = false;
+  // }
 
 //
 // static LogicalKeyboardKey leftKey = LogicalKeyboardKey.arrowLeft;
