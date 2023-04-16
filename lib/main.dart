@@ -87,18 +87,13 @@ class AmongGame2 extends Forge2DGame
     }
     player.input = input;
 
-    // PlayerMovement.checkMove(keysPressed, position, player.velocity);
     return super.onKeyEvent(event, keysPressed);
   }
 
   @override
   void update(double dt) {
     super.update(dt);
-
-    player.body.applyLinearImpulse(velocity * 100 * dt);
-    player.body.applyForce(velocity * 100 * dt);
-    // player.position.add(velocity * dt);
-    // debugPrint(player.position.toString());
+    player.checkMovement(velocity * 100 * dt);
   }
 }
 //

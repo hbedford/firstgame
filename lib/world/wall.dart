@@ -33,6 +33,7 @@ class Wall extends BodyComponent<AmongGame2> with CollisionCallbacks {
     final fixtureDef = FixtureDef(shape)
       ..density = 1.0
       ..friction = 0.0;
+    setColor(Colors.transparent);
     return body..createFixture(fixtureDef);
   }
 }
