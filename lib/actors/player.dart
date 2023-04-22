@@ -24,7 +24,7 @@ class Player extends BodyComponent<AmongGame2> {
   bool hitBottom = false;
   Vector2 input = Vector2(0, 0);
   double currentSpeed = 0;
-  double maxSpeed = 200;
+  double maxSpeed = 10000;
 
   @override
   Future<void> onLoad() async {
@@ -35,6 +35,8 @@ class Player extends BodyComponent<AmongGame2> {
       size: size,
       anchor: Anchor.center,
     ));
+
+    camera.followBodyComponent(this);
   }
 
   @override
